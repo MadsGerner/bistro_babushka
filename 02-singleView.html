@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Single View</title>
+
+    <style>
+        h1 {
+            color: red;
+        }
+
+        img {
+            width: 100%;
+        }
+
+        #liste {
+            display: grid;
+            grid-gap: 20px;
+            margin: 0 auto;
+        }
+
+
+        .retter {
+            padding: 10px;
+        }
+
+        .retter:nth-child(odd) {
+            background: red;
+            color: white;
+
+        }
+
+        .retter:nth-child(even) {
+            color: red;
+            border: red solid 1px;
+
+        }
+
+        @media screen and (min-width:500px) {
+            #liste {
+                grid-template-columns: repeat(1, 1fr);
+                max-width: 300px;
+
+
+            }
+        }
+
+        @media screen and (min-width:750px) {
+            #liste {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 960px;
+            }
+        }
+
+        @media screen and (min-width:1200px) {
+            #liste {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 960px;
+                margin: 0 auto;
+            }
+        }
+
+        #knapper {
+            display: grid;
+            grid-template-columns: repeat(3, 3fr);
+            grid-gap: 10px;
+            margin: 30px auto;
+            max-width: 700px;
+        }
+
+
+        .overskrift {
+            display: flex;
+            justify-content: center;
+        }
+
+        .valgt {
+            background-color: red;
+        }
+
+        #popup {
+            position: fixed;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            overflow: scroll;
+
+        }
+
+        .indhold {
+            width: 70vw;
+            min-height: 50vh;
+            background-color: #fff;
+            margin: 4rem auto;
+            padding: 10px;
+        }
+
+        .luk {
+            position: fixed;
+            right: 0;
+            font-size: 2re;
+        }
+    </style>
+
+    <div class="overskrift">
+        <h1>Alle</h1>
+    </div>
+
+    <nav id="knapper">
+        <button class="filter valgt" data-kategori="alle">Alle retter</button>
+        <button class="filter" data-kategori="forretter">Forretter</button>
+        <button class="filter" data-kategori="hovedretter">Hovedretter</button>
+        <button class="filter" data-kategori="desserter">Desserter</button>
+        <button class="filter" data-kategori="drikkevarer">Drikkevare</button>
+        <button class="filter" data-kategori="sideorders">Side orders</button>
+
+    </nav>
+
+</head>
+
+<body>
+    <div id="popup">
+        <button class="luk">X</button>
+        <section class="indhold">
+            <article class="enkeltRet">
+                <img class="billede" src="" alt="">
+                <h2></h2>
+                <p class="beskrivelse"></p>
+                <p class="pris">Pris:</p>
+            </article>
+        </section>
+    </div>
+    <section id="liste">
+        <template>
+            <article class="retter">
+                <img class="billede" src="" alt="">
+                <h2></h2>
+                <p class="beskrivelse"></p>
+                <p class="pris">Pris:</p>
+            </article>
+        </template>
+    </section>
+
+    <script>
+        //
+        document.addEventListener("DOMContentLoaded", getJson);
+
+        let babushka;
+        let filter = "alle"
+
+        const dest = document.querySelector("#liste");
+        const temp = document.querySelector("template");
+
+        async function getJson() {
+            let jsonData = await fetch("https://spreadsheets.google.com/feeds/list/17Dd7DvkPaFamNUdUKlrFgnH6POvBJXac7qyiS6zNRw0/od6/public/values?alt=json");
+            console.log("jsonData", jsonData);
+            babushka = await jsonData.json();
+
+            visRetter();
+            knapVirker();
+            lukRet();
+        }
+
+        function visRetter() {
+            dest.innerHTML = "";
+
+            babushka.feed.entry.forEach((ret) => {
+                if (filter == "alle" || filter == ret.gsx$kategori.$t) {
+
+                    const klon = temp.cloneNode(true).content;
+
+                    klon.querySelector("h2").textContent = ret.gsx$navn.$t;
+                    klon.querySelector(".billede").src = `imgs/small/${ret.gsx$billede.$t}-sm.jpg`;
+                    klon.querySelector(".billede").textContent = ret.gsx$billede.$t;
+                    klon.querySelector(".beskrivelse").textContent = ret.gsx$kort.$t;
+                    klon.querySelector(".pris").textContent = `Pris: DKK ${ret.gsx$pris.$t}`;
+                    dest.appendChild(klon);
+                    dest.lastElementChild.addEventListener("click", () => {
+                        location.href = `03-singleViewContent.html?id=${ret.gsx$id.$t}`;
+
+
+                    });
+
+
+                }
+            })
+
+        }
+
+
+        function knapVirker() {
+            document.querySelectorAll(".filter").forEach(elm => {
+                elm.addEventListener("click", filtrering);
+            })
+        }
+
+        function filtrering() {
+            filter = this.dataset.kategori;
+
+            visRetter();
+            document.querySelectorAll(".filter").forEach((butt) => {
+                butt.classList.remove("valgt");
+            })
+            this.classList.add("valgt");
+            document.querySelector("h1").textContent = this.textContent;
+        }
+    </script>
+
+</body></html>

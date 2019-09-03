@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+
+    <style>
+        img {
+            width: 100%;
+        }
+
+        .modtager {
+            display: grid;
+            grid-gap: 20px;
+            margin: 0 auto;
+        }
+
+        .style {
+            border: solid 1px black;
+
+        }
+
+        @media screen and (min-width:500px) {
+            .modtager {
+                grid-template-columns: repeat(1, 1fr);
+                max-width: 300px;
+
+
+            }
+        }
+
+        @media screen and (min-width:750px) {
+            .modtager {
+                grid-template-columns: repeat(2, 1fr);
+                max-width: 960px;
+            }
+        }
+
+        @media screen and (min-width:1200px) {
+            .modtager {
+                grid-template-columns: repeat(3, 1fr);
+                max-width: 960px;
+                margin: 0 auto;
+            }
+        }
+
+        #knapper {
+            display: grid;
+            grid-template-columns: repeat(3, 3fr);
+            grid-gap: 10px;
+            margin: 30px auto;
+            max-width: 700px;
+
+        }
+
+
+        .overskrift {
+            display: flex;
+            justify-content: center;
+        }
+
+        .valgt {
+            background-color: red;
+        }
+
+        /*
+        #popup {
+            position: fixed;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none;
+            overflow: scroll;
+
+        }
+
+        .indhold {
+            width: 70vw;
+            min-height: 50vh;
+            background-color: #fff;
+            margin: 4rem auto;
+            padding: 10px;
+        }
+
+        .luk {
+            position: fixed;
+            right: 0;
+            font-size: 2re;
+        }
+*/
+
+    </style>
+
+    <div class="overskrift">
+        <h1>Alle</h1>
+    </div>
+
+    <nav id="knapper">
+        <button class="filter valgt" data-køn="alle">Alle</button>
+        <button class="filter" data-køn="m">Mænd</button>
+        <button class="filter" data-køn="k">Kvinder</button>
+        <button class="filter" data-køn="andet">Andet</button>
+        <button class="hold" data-hold="a">Hold A</button>
+        <button class="hold" data-hold="b">Hold B</button>
+    </nav>
+
+</head>
+
+<body>
+    <!--
+    <div id="popup">
+        <button class="luk">X</button>
+        <section class="indhold">
+            <article class="enkeltPerson">
+                <h2></h2>
+                <img class="billede" src="" alt="">
+                <p>Github: <a class="github" href=""></a></p>
+            </article>
+        </section>
+    </div>
+-->
+    <section class="modtager">
+        <template>
+            <article class="style">
+                <h2></h2>
+                <img src="" alt="">
+                <a href=""></a>
+                <p></p>
+            </article>
+        </template>
+    </section>
+
+    <script>
+        //
+        document.addEventListener("DOMContentLoaded", getJson);
+
+        let personListe;
+        let køn = "alle"
+        let hold = "begge"
+        const modtagerKloner = document.querySelector(".modtager");
+        const temp = document.querySelector("template");
+
+        async function getJson() {
+            let jsonData = await fetch("https://spreadsheets.google.com/feeds/list/1Xge7slZ9dEOTCn1Yxl3OE4xgvrXOL8Y_iu3WN1yGB1U/od6/public/values?alt=json");
+            console.log("jsonData", jsonData);
+            personListe = await jsonData.json();
+            console.log(personListe);
+            visPersonListe();
+            addEventlisnersToButtons();
+            addEventlisnersToButtonsHold();
+        }
+
+        function visPersonListe() {
+            modtagerKloner.innerHTML = "";
+            personListe.feed.entry.forEach((person) => {
+                if (køn == "alle" && hold == "begge" || køn == person.gsx$køn.$t && hold == person.gsx$hold.$t || køn == "alle" && hold == person.gsx$hold.$t || køn == person.gsx$køn.$t && hold == "begge") {
+
+                    const klon = temp.cloneNode(true).content;
+                    klon.querySelector("h2").textContent = person.gsx$navn.$t;
+                    klon.querySelector("a").textContent = `https://github.com/${person.gsx$github.$t}`;
+                    klon.querySelector("a").href = `https://github.com/${person.gsx$github.$t}`;
+                    klon.querySelector("img").src = person.gsx$billede.$t;
+                    modtagerKloner.appendChild(klon);
+                    modtagerKloner.lastElementChild.addEventListener("click", () => {
+                        location.href = `06-single.html?github=${person.gsx$github.$t}`;
+                        //                        visSingle(person)
+                    });
+                }
+            })
+        }
+
+
+        //        function visSingle(person) {
+        //            document.querySelector("#popup").style.display = "block";
+        //            document.querySelector("#popup .luk").addEventListener("click", lukSingle);
+        //
+        //            document.querySelector(".enkeltPerson h2").textContent = person.gsx$navn.$t;
+        //            document.querySelector(".enkeltPerson .billede").src = person.gsx$billede.$t;
+        //            document.querySelector(".enkeltPerson .billede").alt = person.gsx$navn.$t;
+        //            document.querySelector(".enkeltPerson .github").href = `http://github.com/${person.gsx$github.$t}`;
+        //            document.querySelector(".enkeltPerson .github").href = `http://github.com/${person.gsx$github.$t}`;
+        //            //            document.querySelector(".enkeltPerson .historie").textContent = person.gsx$historie.$t;
+        //
+        //        }
+        //
+        //        function lukSingle() {
+        //            document.querySelector("#popup").style.display = "none";
+        //        }
+
+
+        function addEventlisnersToButtons() {
+            document.querySelectorAll(".filter").forEach(elm => {
+                elm.addEventListener("click", filtrering);
+            })
+        }
+
+        function filtrering() {
+            køn = this.dataset.køn;
+
+            visPersonListe();
+            document.querySelectorAll(".filter").forEach((butt) => {
+                butt.classList.remove("valgt");
+            })
+            this.classList.add("valgt");
+            document.querySelector("h1").textContent = this.textContent;
+        }
+
+
+
+        function addEventlisnersToButtonsHold() {
+            document.querySelectorAll(".hold").forEach(elm => {
+                elm.addEventListener("click", filtreringHold);
+            })
+        }
+
+        function filtreringHold() {
+            hold = this.dataset.hold;
+            visPersonListe();
+            document.querySelectorAll(".hold").forEach((butt) => {
+                butt.classList.remove("valgt");
+            })
+            this.classList.add("valgt");
+            document.querySelector("h1").textContent = this.textContent;
+        }
+
+    </script>
+</body>
+
+</html>
